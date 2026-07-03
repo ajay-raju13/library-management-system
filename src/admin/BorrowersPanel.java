@@ -5,6 +5,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
+import ui.Theme;
 
 public class BorrowersPanel extends JPanel {
 
@@ -13,7 +14,7 @@ public class BorrowersPanel extends JPanel {
     private JButton addBtn, removeBtn, editBtn, refreshBtn;
 
     public BorrowersPanel() {
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(8, 8));
 
         // Table model
         model = new DefaultTableModel(
@@ -21,21 +22,37 @@ public class BorrowersPanel extends JPanel {
         );
         table = new JTable(model);
         table.setFillsViewportHeight(true);
+        Theme.styleTable(table);
+        table.setSelectionBackground(new Color(6, 182, 212));
+        table.setSelectionForeground(Color.white);
 
         JScrollPane scrollPane = new JScrollPane(table);
-        add(scrollPane, BorderLayout.CENTER);
+        scrollPane.getViewport().setBackground((Color) UIManager.get("Panel.background"));
 
         // Buttons
         JPanel btnPanel = new JPanel();
+        btnPanel.setOpaque(false);
         addBtn = new JButton("Add Borrower");
         removeBtn = new JButton("Remove Borrower");
         editBtn = new JButton("Edit Borrower");
         refreshBtn = new JButton("Refresh");
+
+        Theme.styleButton(addBtn);
+        Theme.styleButton(removeBtn);
+        Theme.styleButton(editBtn);
+        Theme.styleButton(refreshBtn);
+
         btnPanel.add(addBtn);
         btnPanel.add(removeBtn);
         btnPanel.add(editBtn);
         btnPanel.add(refreshBtn);
-        add(btnPanel, BorderLayout.SOUTH);
+
+        JPanel center = new JPanel(new BorderLayout(8,8));
+        center.setOpaque(false);
+        center.add(scrollPane, BorderLayout.CENTER);
+        center.add(btnPanel, BorderLayout.SOUTH);
+
+        add(Theme.createCard("Borrowers", center, new Color(3, 105, 161), new Color(6, 182, 129)), BorderLayout.CENTER);
 
         // Load table
         SwingUtilities.invokeLater(this::loadBorrowers);
@@ -62,22 +79,21 @@ public class BorrowersPanel extends JPanel {
                 });
             }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error loading borrowers: " + ex.getMessage());
+            Theme.showMessage(this, "Error loading borrowers: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void addBorrower() {
+        JPanel form = new JPanel(new GridLayout(3,2,8,8));
+        form.setOpaque(false);
         JTextField nameField = new JTextField();
         JTextField fineField = new JTextField("0");
         JTextField contactField = new JTextField();
+        form.add(new JLabel("Name:")); form.add(nameField);
+        form.add(new JLabel("Current Fine:")); form.add(fineField);
+        form.add(new JLabel("Contact:")); form.add(contactField);
 
-        Object[] fields = {
-                "Name:", nameField,
-                "Current Fine:", fineField,
-                "Contact:", contactField
-        };
-
-        int option = JOptionPane.showConfirmDialog(this, fields, "Add Borrower", JOptionPane.OK_CANCEL_OPTION);
+        int option = Theme.showFormDialog(this, "Add Borrower", form);
         if (option == JOptionPane.OK_OPTION) {
             try (Connection con = DBConnection.getConnection();
                  PreparedStatement ps = con.prepareStatement(
@@ -87,10 +103,10 @@ public class BorrowersPanel extends JPanel {
                 ps.setFloat(2, Float.parseFloat(fineField.getText()));
                 ps.setLong(3, Long.parseLong(contactField.getText()));
                 ps.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Borrower added successfully!");
+                Theme.showMessage(this, "Borrower added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 loadBorrowers();
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error adding borrower: " + ex.getMessage());
+                Theme.showMessage(this, "Error adding borrower: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -103,13 +119,13 @@ public class BorrowersPanel extends JPanel {
                  PreparedStatement ps = con.prepareStatement("DELETE FROM borrower WHERE borrow_id=?")) {
                 ps.setInt(1, borrowId);
                 ps.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Borrower removed successfully!");
+                Theme.showMessage(this, "Borrower removed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 loadBorrowers();
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error removing borrower: " + ex.getMessage());
+                Theme.showMessage(this, "Error removing borrower: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Please select a borrower to remove.");
+            Theme.showMessage(this, "Please select a borrower to remove.", "Notice", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -121,18 +137,17 @@ public class BorrowersPanel extends JPanel {
             float currentFine = (float) model.getValueAt(selectedRow, 2);
             long currentContact = (long) model.getValueAt(selectedRow, 3);
 
-            JTextField nameField = new JTextField(currentName);
-            JTextField fineField = new JTextField(String.valueOf(currentFine));
-            JTextField contactField = new JTextField(String.valueOf(currentContact));
+                JPanel form = new JPanel(new GridLayout(3,2,8,8));
+                form.setOpaque(false);
+                JTextField nameField = new JTextField(currentName);
+                JTextField fineField = new JTextField(String.valueOf(currentFine));
+                JTextField contactField = new JTextField(String.valueOf(currentContact));
+                form.add(new JLabel("Name:")); form.add(nameField);
+                form.add(new JLabel("Current Fine:")); form.add(fineField);
+                form.add(new JLabel("Contact:")); form.add(contactField);
 
-            Object[] fields = {
-                    "Name:", nameField,
-                    "Current Fine:", fineField,
-                    "Contact:", contactField
-            };
-
-            int option = JOptionPane.showConfirmDialog(this, fields, "Edit Borrower", JOptionPane.OK_CANCEL_OPTION);
-            if (option == JOptionPane.OK_OPTION) {
+                int option = Theme.showFormDialog(this, "Edit Borrower", form);
+                if (option == JOptionPane.OK_OPTION) {
                 try (Connection con = DBConnection.getConnection();
                      PreparedStatement ps = con.prepareStatement(
                              "UPDATE borrower SET name=?, current_fine=?, contact=? WHERE borrow_id=?"
@@ -142,14 +157,14 @@ public class BorrowersPanel extends JPanel {
                     ps.setLong(3, Long.parseLong(contactField.getText()));
                     ps.setInt(4, borrowId);
                     ps.executeUpdate();
-                    JOptionPane.showMessageDialog(this, "Borrower updated successfully!");
+                    Theme.showMessage(this, "Borrower updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                     loadBorrowers();
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(this, "Error updating borrower: " + ex.getMessage());
+                    Theme.showMessage(this, "Error updating borrower: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Please select a borrower to edit.");
+            Theme.showMessage(this, "Please select a borrower to edit.", "Notice", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 

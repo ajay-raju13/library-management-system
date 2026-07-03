@@ -6,6 +6,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
 import java.util.Vector;
+import ui.Theme;
 
 public class CheckoutsPanel extends JPanel {
 
@@ -14,7 +15,7 @@ public class CheckoutsPanel extends JPanel {
     private JButton returnBtn, refreshBtn, addBtn;
 
     public CheckoutsPanel() {
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(8, 8));
 
         // Table model
         model = new DefaultTableModel(
@@ -22,18 +23,32 @@ public class CheckoutsPanel extends JPanel {
         );
         table = new JTable(model);
         table.setFillsViewportHeight(true);
+        Theme.styleTable(table);
+        table.setSelectionBackground(new Color(6, 182, 212));
+        table.setSelectionForeground(Color.white);
 
         JScrollPane scrollPane = new JScrollPane(table);
-        add(scrollPane, BorderLayout.CENTER);
+        scrollPane.getViewport().setBackground((Color) UIManager.get("Panel.background"));
 
         JPanel btnPanel = new JPanel();
         addBtn = new JButton("Add Checkout");
         returnBtn = new JButton("Return Book");
         refreshBtn = new JButton("Refresh");
+
+        Theme.styleButton(addBtn);
+        Theme.styleButton(returnBtn);
+        Theme.styleButton(refreshBtn);
+
         btnPanel.add(addBtn);
         btnPanel.add(returnBtn);
         btnPanel.add(refreshBtn);
-        add(btnPanel, BorderLayout.SOUTH);
+
+        JPanel center = new JPanel(new BorderLayout(8,8));
+        center.setOpaque(false);
+        center.add(scrollPane, BorderLayout.CENTER);
+        center.add(btnPanel, BorderLayout.SOUTH);
+
+        add(Theme.createCard("Checkouts", center, new Color(200, 80, 20), new Color(240, 140, 30)), BorderLayout.CENTER);
 
         // Load checkouts initially
         SwingUtilities.invokeLater(this::loadCheckouts);
@@ -61,14 +76,14 @@ public class CheckoutsPanel extends JPanel {
                 });
             }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error loading checkouts: " + ex.getMessage());
+            Theme.showMessage(this, "Error loading checkouts: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void returnSelectedBook() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow < 0) {
-            JOptionPane.showMessageDialog(this, "Please select a checkout to return.");
+            Theme.showMessage(this, "Please select a checkout to return.", "Notice", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -91,7 +106,7 @@ public class CheckoutsPanel extends JPanel {
 
                 if (daysDiff > 30) {
                     overdue = true;
-                    JOptionPane.showMessageDialog(this, "Book is overdue! Returned after " + daysDiff + " days.");
+                    Theme.showMessage(this, "Book is overdue! Returned after " + daysDiff + " days.", "Overdue", JOptionPane.WARNING_MESSAGE);
                 }
             }
 
@@ -111,7 +126,7 @@ public class CheckoutsPanel extends JPanel {
                 psFine.executeUpdate();
             }
 
-            JOptionPane.showMessageDialog(this, "Book returned successfully.");
+                Theme.showMessage(this, "Book returned successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
             loadCheckouts();
 
         } catch (SQLException ex) {
@@ -142,15 +157,18 @@ public class CheckoutsPanel extends JPanel {
             }
 
             if (borrowers.isEmpty() || books.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "No borrowers or books with available copies.");
+                Theme.showMessage(this, "No borrowers or books with available copies.", "Notice", JOptionPane.INFORMATION_MESSAGE);
                 return;
             }
 
+            JPanel form = new JPanel(new GridLayout(2,2,8,8));
+            form.setOpaque(false);
             JComboBox<String> borrowerBox = new JComboBox<>(borrowers);
             JComboBox<String> bookBox = new JComboBox<>(books);
-            Object[] fields = {"Select Borrower:", borrowerBox, "Select Book:", bookBox};
+            form.add(new JLabel("Select Borrower:")); form.add(borrowerBox);
+            form.add(new JLabel("Select Book:")); form.add(bookBox);
 
-            int option = JOptionPane.showConfirmDialog(this, fields, "Add Checkout", JOptionPane.OK_CANCEL_OPTION);
+            int option = Theme.showFormDialog(this, "Add Checkout", form);
             if (option == JOptionPane.OK_OPTION) {
                 int selectedBorrower = borrowerIds.get(borrowerBox.getSelectedIndex());
                 int selectedBook = bookIds.get(bookBox.getSelectedIndex());
@@ -168,12 +186,12 @@ public class CheckoutsPanel extends JPanel {
                 psUpdateBook.setInt(1, selectedBook);
                 psUpdateBook.executeUpdate();
 
-                JOptionPane.showMessageDialog(this, "Checkout added successfully!");
+                Theme.showMessage(this, "Checkout added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 loadCheckouts();
             }
 
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error adding checkout: " + ex.getMessage());
+            Theme.showMessage(this, "Error adding checkout: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

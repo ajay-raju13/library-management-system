@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
+import ui.Theme;
 
 public class CategoriesPanel extends JPanel {
 
@@ -14,23 +15,38 @@ public class CategoriesPanel extends JPanel {
     private JButton addBtn, removeBtn, refreshBtn;
 
     public CategoriesPanel() {
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(8, 8));
 
         model = new DefaultTableModel(new String[]{"Category ID", "Category Name"}, 0);
         table = new JTable(model);
         table.setFillsViewportHeight(true);
+        Theme.styleTable(table);
+        table.setSelectionBackground(new Color(6, 182, 212));
+        table.setSelectionForeground(Color.white);
 
         JScrollPane scrollPane = new JScrollPane(table);
-        add(scrollPane, BorderLayout.CENTER);
+        scrollPane.getViewport().setBackground((Color) UIManager.get("Panel.background"));
 
         JPanel btnPanel = new JPanel();
+        btnPanel.setOpaque(false);
         addBtn = new JButton("Add Category");
         removeBtn = new JButton("Remove Category");
         refreshBtn = new JButton("Refresh");
+
+        Theme.styleButton(addBtn);
+        Theme.styleButton(removeBtn);
+        Theme.styleButton(refreshBtn);
+
         btnPanel.add(addBtn);
         btnPanel.add(removeBtn);
         btnPanel.add(refreshBtn);
-        add(btnPanel, BorderLayout.SOUTH);
+
+        JPanel center = new JPanel(new BorderLayout(8,8));
+        center.setOpaque(false);
+        center.add(scrollPane, BorderLayout.CENTER);
+        center.add(btnPanel, BorderLayout.SOUTH);
+
+        add(Theme.createCard("Categories", center, new Color(20, 60, 200), new Color(40, 120, 245)), BorderLayout.CENTER);
 
         SwingUtilities.invokeLater(this::loadCategories);
 
@@ -51,21 +67,21 @@ public class CategoriesPanel extends JPanel {
                 });
             }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error loading categories: " + ex.getMessage());
+            Theme.showMessage(this, "Error loading categories: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void addCategory() {
-        String name = JOptionPane.showInputDialog(this, "Enter category name:");
+        String name = Theme.showInputDialog(this, "Enter category name:", "");
         if (name != null && !name.isEmpty()) {
             try (Connection con = DBConnection.getConnection();
                  PreparedStatement ps = con.prepareStatement("INSERT INTO category(c_name) VALUES(?)")) {
                 ps.setString(1, name);
                 ps.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Category added!");
+                Theme.showMessage(this, "Category added!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 loadCategories();
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error adding category: " + ex.getMessage());
+                Theme.showMessage(this, "Error adding category: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -80,18 +96,18 @@ public class CategoriesPanel extends JPanel {
                 psCheck.setInt(1, id);
                 ResultSet rs = psCheck.executeQuery();
                 if (rs.next()) {
-                    JOptionPane.showMessageDialog(this, "Cannot remove category with books.");
+                    Theme.showMessage(this, "Cannot remove category with books.", "Notice", JOptionPane.INFORMATION_MESSAGE);
                     return;
                 }
                 psDel.setInt(1, id);
                 psDel.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Category removed!");
+                Theme.showMessage(this, "Category removed!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 loadCategories();
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error removing category: " + ex.getMessage());
+                Theme.showMessage(this, "Error removing category: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Select a category first.");
+            Theme.showMessage(this, "Select a category first.", "Notice", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 }

@@ -4,8 +4,8 @@ import db.DBConnection;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.*;
 import java.sql.*;
+import ui.Theme;
 
 public class BooksPanel extends JPanel {
 
@@ -14,26 +14,45 @@ public class BooksPanel extends JPanel {
     private JButton addBtn, removeBtn, refreshBtn, editBtn;
 
     public BooksPanel() {
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(8, 8));
 
         // Table model
         model = new DefaultTableModel(new String[]{"Book ID", "Title", "Author", "Total Copies", "Available Copies", "Category"}, 0);
         table = new JTable(model);
         table.setFillsViewportHeight(true);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        Theme.styleTable(table);
+        table.setRowHeight(28);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setSelectionBackground(new Color(6, 182, 212));
+        table.setSelectionForeground(Color.white);
+
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.getViewport().setBackground((Color) UIManager.get("Panel.background"));
 
         // Buttons
         JPanel btnPanel = new JPanel();
+        btnPanel.setOpaque(false);
         addBtn = new JButton("Add Book");
+        editBtn = new JButton("Edit Book");
         removeBtn = new JButton("Remove Book");
         refreshBtn = new JButton("Refresh");
-        editBtn = new JButton("Edit Book");
+
+        Theme.styleButton(addBtn);
+        Theme.styleButton(editBtn);
+        Theme.styleButton(removeBtn);
+        Theme.styleButton(refreshBtn);
 
         btnPanel.add(addBtn);
         btnPanel.add(editBtn);
         btnPanel.add(removeBtn);
         btnPanel.add(refreshBtn);
-        add(btnPanel, BorderLayout.SOUTH);
+
+        JPanel center = new JPanel(new BorderLayout(8,8));
+        center.setOpaque(false);
+        center.add(scroll, BorderLayout.CENTER);
+        center.add(btnPanel, BorderLayout.SOUTH);
+
+        add(Theme.createCard("Books Management", center, new Color(40, 20, 120), new Color(120, 60, 220)), BorderLayout.CENTER);
 
         // Load data
         SwingUtilities.invokeLater(this::loadBooks);
@@ -62,26 +81,25 @@ public class BooksPanel extends JPanel {
                 });
             }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error loading books: " + ex.getMessage());
+            Theme.showMessage(this, "Error loading books: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void addBook() {
+        JPanel form = new JPanel(new GridLayout(5,2,8,8));
+        form.setOpaque(false);
         JTextField titleField = new JTextField();
         JTextField authorField = new JTextField();
         JTextField totalField = new JTextField();
         JTextField availField = new JTextField();
         JTextField cidField = new JTextField();
+        form.add(new JLabel("Title:")); form.add(titleField);
+        form.add(new JLabel("Author:")); form.add(authorField);
+        form.add(new JLabel("Total Copies:")); form.add(totalField);
+        form.add(new JLabel("Available Copies:")); form.add(availField);
+        form.add(new JLabel("Category ID:")); form.add(cidField);
 
-        Object[] fields = {
-                "Title:", titleField,
-                "Author:", authorField,
-                "Total Copies:", totalField,
-                "Available Copies:", availField,
-                "Category ID:", cidField
-        };
-
-        int option = JOptionPane.showConfirmDialog(this, fields, "Add Book", JOptionPane.OK_CANCEL_OPTION);
+        int option = Theme.showFormDialog(this, "Add Book", form);
         if (option == JOptionPane.OK_OPTION) {
             try (Connection con = DBConnection.getConnection();
                  PreparedStatement ps = con.prepareStatement("INSERT INTO books(title, author, total_copies, available_copies, cid) VALUES(?,?,?,?,?)")) {
@@ -91,10 +109,10 @@ public class BooksPanel extends JPanel {
                 ps.setInt(4, Integer.parseInt(availField.getText()));
                 ps.setInt(5, Integer.parseInt(cidField.getText()));
                 ps.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Book added successfully!");
+                Theme.showMessage(this, "Book added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 loadBooks();
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error adding book: " + ex.getMessage());
+                Theme.showMessage(this, "Error adding book: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -107,20 +125,20 @@ public class BooksPanel extends JPanel {
                  PreparedStatement ps = con.prepareStatement("DELETE FROM books WHERE book_id=?")) {
                 ps.setInt(1, bookId);
                 ps.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Book removed successfully!");
+                Theme.showMessage(this, "Book removed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 loadBooks();
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error removing book: " + ex.getMessage());
+                Theme.showMessage(this, "Error removing book: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Please select a book to remove.");
+            Theme.showMessage(this, "Please select a book to remove.", "Notice", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     private void editBook() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Please select a book to edit.");
+            Theme.showMessage(this, "Please select a book to edit.", "Notice", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -130,19 +148,18 @@ public class BooksPanel extends JPanel {
         int totalCopies = (int) model.getValueAt(selectedRow, 3);
         int availableCopies = (int) model.getValueAt(selectedRow, 4);
 
+        JPanel form = new JPanel(new GridLayout(4,2,8,8));
+        form.setOpaque(false);
         JTextField titleField = new JTextField(title);
         JTextField authorField = new JTextField(author);
         JTextField totalField = new JTextField(String.valueOf(totalCopies));
         JTextField availField = new JTextField(String.valueOf(availableCopies));
+        form.add(new JLabel("Title:")); form.add(titleField);
+        form.add(new JLabel("Author:")); form.add(authorField);
+        form.add(new JLabel("Total Copies:")); form.add(totalField);
+        form.add(new JLabel("Available Copies:")); form.add(availField);
 
-        Object[] fields = {
-                "Title:", titleField,
-                "Author:", authorField,
-                "Total Copies:", totalField,
-                "Available Copies:", availField
-        };
-
-        int option = JOptionPane.showConfirmDialog(this, fields, "Edit Book", JOptionPane.OK_CANCEL_OPTION);
+        int option = Theme.showFormDialog(this, "Edit Book", form);
         if (option == JOptionPane.OK_OPTION) {
             try (Connection con = DBConnection.getConnection();
                  PreparedStatement ps = con.prepareStatement("UPDATE books SET title=?, author=?, total_copies=?, available_copies=? WHERE book_id=?")) {
@@ -152,10 +169,10 @@ public class BooksPanel extends JPanel {
                 ps.setInt(4, Integer.parseInt(availField.getText()));
                 ps.setInt(5, bookId);
                 ps.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Book details updated successfully!");
+                Theme.showMessage(this, "Book details updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 loadBooks();
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error updating book: " + ex.getMessage());
+                Theme.showMessage(this, "Error updating book: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

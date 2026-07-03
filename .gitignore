@@ -1,3 +1,46 @@
+# Java compiled class files
+*.class
+
+# Output directories
+/bin/
+/out/
+/build/
+/target/
+/dist/
+
+# IDE files
+/.idea/
+*.iml
+/.classpath
+/.project
+/.settings/
+/.vscode/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Ignore jars by default but keep libs in /lib committed
+*.jar
+!lib/*.jar
+
+# Environment and credentials (if any)
+.env
+*.properties
+
+# Other
+.idea/
+.history/
 bin/
 .vscode/
 *.class
