@@ -103,5 +103,5 @@ Notes:
 - Pooja Pradeep
 - Nirmalsankar A S
 - Arya Sivaji
-— BTech Computer Science And Engineering
-— College of Engineering Kidangoor 
+-— BTech Computer Science And Engineering
+-— College of Engineering Kidangoor 
