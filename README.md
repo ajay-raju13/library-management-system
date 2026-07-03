@@ -99,4 +99,9 @@ Notes:
 
 ## Author
 
-Ajay — BTech Computer Science Engineering
+Ajay Raju
+Pooja Pradeep
+Nirmalsankar A S
+Arya Sivaji
+— BTech Computer Science And Engineering
+— College of Engineering Kidangoor 
