@@ -1,77 +1,56 @@
+
 # Library Management System
 
-A desktop based Library Management System built using Java Swing and MySQL.  
-This application was developed as a DBMS project during my third year of BTech, with a focus on real world database driven workflows and clean system design.
+A desktop Library Management System built with Java Swing and MySQL.  
+Developed as a DBMS project demonstrating JDBC-driven workflows and a clean separation between UI and database logic.
 
 ---
 
 ## Overview
 
-The system helps manage books, borrowers, categories, and checkouts through a graphical Java Swing interface connected to a MySQL database.  
-It supports core library operations such as issuing books, tracking availability, detecting overdue returns, and managing borrower fines.
+Manage books, borrowers, categories, and checkouts via a Java Swing GUI backed by MySQL.  
+Supports issuing/returning books, availability tracking, overdue detection, and borrower fine management.
 
-This project emphasizes practical use of relational databases, SQL queries, and Java database connectivity using JDBC.
+This project emphasizes practical use of relational databases, SQL queries, and JDBC connectivity.
 
 ---
 
 ## Key Features
 
-- Admin login authentication  
-- Add, edit, delete, and view books  
-- Category wise book management  
+- Admin authentication and tabbed dashboard  
+- Add / edit / delete / view books and categories  
 - Borrower management with fine tracking  
-- Issue and return books with real time availability updates  
-- Automatic overdue detection after 30 days  
-- Fine calculation linked directly to borrowers  
-- Normalized relational database design  
-- Referential integrity using primary and foreign keys  
+- Issue and return books with availability updates  
+- Automatic overdue detection (30 days) and fine application  
+- Simple, themeable Swing UI with readable tables and dialogs
+
+---
+
+## Overdue & Fine Calculation
+
+- Overdue detection: A checkout is considered overdue when returned more than 30 days after checkout.  
+- Fine logic (current implementation): returning an overdue book adds a fixed fine of 50 units to the borrower's `current_fine`.  
+- Recommendation: Make the overdue window and fine amount configurable (via `config.properties` or environment variables) before publishing a runnable artifact.
 
 ---
 
 ## Tech Stack
 
 - Frontend: Java Swing  
-- Backend: MySQL  
-- Database Connectivity: JDBC  
-- Tools: VS Code, MySQL Workbench  
-
----
-
-## Database Design Overview
-
-The database follows a normalized relational structure with the following tables:
-
-- Departments  
-- Students (Borrowers)  
-- Books  
-- Courses  
-- Enrollments (Checkouts)  
-
-Foreign key constraints are used to maintain referential integrity and ensure consistent data across operations.
+- Database: MySQL  
+- DB access: JDBC (mysql-connector-j)  
+- Tools: VS Code, MySQL Workbench
 
 ---
 
 ## Project Structure
 
-src/
-├─ admin/
-│ ├─ AdminLogin.java
-│ ├─ AdminDashboard.java
-│ ├─ BooksPanel.java
-│ ├─ BorrowersPanel.java
-│ ├─ CategoriesPanel.java
-│ └─ CheckoutsPanel.java
-│
-├─ user/
-│ ├─ UserLogin.java
-│ └─ UserDashboard.java
-│
-└─ db/
-└─ DBConnection.java
+src/  
+├─ admin/ (AdminLogin, AdminDashboard, BooksPanel, BorrowersPanel, CategoriesPanel, CheckoutsPanel)  
+└─ db/ (DBConnection.java)
 
-lib/
+lib/  
 └─ mysql-connector-j-9.4.0.jar
-
 
 ---
 
@@ -84,64 +63,40 @@ Manages JDBC connectivity and acts as a centralized database access layer.
 Handles admin authentication before allowing dashboard access.
 
 **AdminDashboard.java**  
-Acts as the main control panel with tab based navigation between modules.
+Main control panel with tabbed navigation between modules.
 
-**BooksPanel.java**  
-Displays book records and manages add, edit, delete operations with real time updates.
-
-**BorrowersPanel.java**  
-Manages borrower details and fine tracking.
-
-**CategoriesPanel.java**  
-Handles category creation and deletion with dependency checks.
-
-**CheckoutsPanel.java**  
-Manages book issue and return logic including overdue detection and fine updates.
+**BooksPanel.java / BorrowersPanel.java / CategoriesPanel.java / CheckoutsPanel.java**  
+CRUD and workflow logic for books, borrowers, categories and checkouts (includes overdue detection and fine updates).
 
 ---
 
-## Screenshots
+## How to Run (Windows PowerShell)
 
-### Admin Login
-![Admin Login](screenshots/login.png)
+1. Install MySQL and create the required schema/tables.  
+2. Update database credentials in `src/db/DBConnection.java` or move them to a config file (recommended).  
+3. Ensure `lib/mysql-connector-j-9.4.0.jar` is present.
 
-### Dashboard
-![Dashboard](screenshots/dashboard.png)
+Copy-paste PowerShell to compile and run:
+```powershell
+$files = Get-ChildItem -Recurse -Filter *.java | ForEach-Object { $_.FullName }
+javac -cp ".\lib\mysql-connector-j-9.4.0.jar" -d .\bin $files
+if ($LASTEXITCODE -eq 0) { java -cp ".\bin;.\lib\mysql-connector-j-9.4.0.jar" admin.AdminLogin } else { Write-Error "Compilation failed"; exit $LASTEXITCODE }
+```
 
-### Books Management
-![Books Management](screenshots/books.png)
-
-### Borrower Management
-![Borrower Management](screenshots/borrowers.png)
-
-### Category Management
-![Category Management](screenshots/categories.png)
-
-### Issue and Return Books
-![Issue and Return Books](screenshots/checkouts.png)
+Notes:
+- Do NOT commit credentials. Move DB URL/USER/PASS to `config.properties` or environment variables when sharing binaries.  
+- To create a runnable JAR, add a manifest with `Main-Class: admin.AdminLogin` and include the JDBC connector on the classpath or bundle as a fat JAR.
 
 ---
 
 ## What This Project Demonstrates
 
-- Strong understanding of SQL queries, joins, and constraints  
-- Proper use of primary and foreign keys  
-- Practical JDBC based database connectivity  
-- Clean separation of UI and database logic  
-- Real world data integrity and validation handling  
-
----
-
-## How to Run
-
-1. Install MySQL and create the required tables.
-2. Update database credentials in `DBConnection.java`.
-3. Add the MySQL JDBC connector to the project classpath.
-4. Compile and run the application using your IDE.
+- Practical JDBC usage and SQL query design  
+- UI theming for desktop apps (dark theme, table styling, dialogs)  
+- Real-world workflows: checkouts, returns, availability and fine handling
 
 ---
 
 ## Author
 
-Ajay  
-BTech Computer Science Engineering
+Ajay — BTech Computer Science Engineering
